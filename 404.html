@@ -1,25 +1,93 @@
----
-permalink: /404.html
-layout: default
----
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON Data Display</title>
+  <style>
+    .pagination {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Data from JSON</h1>
+  <div id="dataDisplay"></div>
+  <div class="pagination" id="pagination"></div>
 
-<style type="text/css" media="screen">
-  .container {
-    margin: 10px auto;
-    max-width: 600px;
-    text-align: center;
-  }
-  h1 {
-    margin: 30px 0;
-    font-size: 4em;
-    line-height: 1;
-    letter-spacing: -1px;
-  }
-</style>
+  <script>
+    // Function to get the page number from the URL
+    function getPageNumberFromUrl() {
+      const url = window.location.href;
+      const pageNumberMatch = url.match(/\/(\d+)/);
+      if (pageNumberMatch) {
+        return pageNumberMatch[1];
+      }
+      return null;
+    }
 
-<div class="container">
-  <h1>404</h1>
+    // Function to create pagination
+    function createPagination(currentPage, totalPages) {
+      const paginationElement = document.getElementById('pagination');
+      paginationElement.innerHTML = '';
 
-  <p><strong>Page not found :(</strong></p>
-  <p>The requested page could not be found.</p>
-</div>
+      if (currentPage > 1) {
+        const previousButton = document.createElement('button');
+        previousButton.textContent = 'Previous';
+        previousButton.addEventListener('click', () => {
+          const previousPage = parseInt(currentPage) - 1;
+          window.location.href = `/${previousPage}`;
+        });
+        paginationElement.appendChild(previousButton);
+      }
+
+      if (currentPage < totalPages) {
+        const nextButton = document.createElement('button');
+        nextButton.textContent = 'Next';
+        nextButton.addEventListener('click', () => {
+          const nextPage = parseInt(currentPage) + 1;
+          window.location.href = `/${nextPage}`;
+        });
+        paginationElement.appendChild(nextButton);
+      }
+    }
+
+    // Fetch the JSON data based on the page number
+    const pageNumber = getPageNumberFromUrl();
+    if (pageNumber) {
+      const jsonUrl = `${pageNumber}.json`;
+      fetch(jsonUrl)
+        .then(response => response.json())
+        .then(data => {
+          // Access the JSON data
+          const paginationDetails = data[0].split('/');
+          const currentPage = parseInt(paginationDetails[0]);
+          const totalPages = parseInt(paginationDetails[1]);
+
+          // Display the data in the specified format
+          const dataDisplay = document.getElementById('dataDisplay');
+          dataDisplay.innerHTML = ''; // Clear previous data
+          const titlesAndDescriptions = data[1];
+          titlesAndDescriptions.forEach(item => {
+            const title = item[0];
+            const description = item[1];
+            const titleElement = document.createElement('h2');
+            titleElement.textContent = title;
+            const descriptionElement = document.createElement('p');
+            descriptionElement.textContent = description;
+            dataDisplay.appendChild(titleElement);
+            dataDisplay.appendChild(descriptionElement);
+          });
+
+          // Create pagination
+          createPagination(currentPage, totalPages);
+        })
+        .catch(error => {
+          console.error('Error fetching the JSON file:', error);
+        });
+    } else {
+      console.error('Page number not found in the URL');
+    }
+  </script>
+</body>
+</html>
